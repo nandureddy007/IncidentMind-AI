@@ -64,21 +64,16 @@ git push -u origin main
 ```
 Never commit `.env`, API keys, tokens, or production incident secrets.
 
-## Deploy backend to Render
+## Deploy the app to Render
 1. Push this repository to GitHub.
-2. In Render, choose **New + → Blueprint** and select the repository. Render should detect `backend/render.yaml`.
-3. Once deployed, copy the API service URL and verify `/health` and `/docs`.
-4. For persistent data, attach a Render persistent disk and configure `DB_PATH` to a path on that disk (SQLite data on an ephemeral filesystem can reset on redeploy). For multi-user production, use managed PostgreSQL.
-
-## Deploy frontend to Vercel
-1. Import the same GitHub repository in Vercel.
-2. Set **Root Directory** to `frontend`.
-3. Framework preset: Vite.
-4. Add environment variable `VITE_API_URL` = your Render backend URL (no trailing slash).
-5. Deploy and redeploy after changing environment variables.
+2. In Render, choose **New + → Blueprint** and select this repository. Render reads the root `render.yaml` and creates the API web service and frontend static site.
+3. Wait for both services to deploy. Open the frontend URL shown in Render; the Blueprint supplies the API URL to the frontend build.
+4. Verify the API at `/health` and `/docs` on the API service URL.
+5. To enable LLM analysis, add `OPENAI_API_KEY` to the API service's environment in Render. Do not put it in the Blueprint or frontend. Without it, the app uses local keyword analysis.
+6. The API uses free ephemeral storage by default, so new incidents can be lost when the service restarts or redeploys. For durable data, attach persistent storage and configure `DB_PATH`, or use managed PostgreSQL for multi-user production.
 
 ## CORS
-For a public deployment, set backend `CORS_ORIGINS` to your exact Vercel URL (comma-separated for previews if needed), rather than `*`. The current blueprint uses `*` for quick hackathon setup.
+For a public deployment, set backend `CORS_ORIGINS` to the exact frontend origin (comma-separated for previews if needed), rather than `*`. The current Blueprint uses `*` for quick hackathon setup.
 
 ## Suggested next upgrades
 - Replace SQLite with managed PostgreSQL for persistent multi-user use.
