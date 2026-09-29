@@ -1,20 +1,29 @@
-# IncidentMind AI
+# IncidentMind AI ✳
 
-A full-stack incident response hackathon prototype. It lets a team report incidents, analyze them against resolved incident history, view likely causes and recommended diagnostic steps, and save a postmortem for future recall.
+An institutional memory-powered incident response agent for Site Reliability Engineers (SRE) and DevOps teams, built for **HackwithHyderabad 3.0**.
 
-## Stack
-- React + Vite frontend
-- FastAPI backend
-- SQLite demo incident memory (seeded with sample incidents)
-- Optional deployment: Render (API) + Vercel (frontend)
+IncidentMind AI turns postmortems into active operational knowledge. When production incidents occur, it compares active symptoms against past resolved outages, generates evidence-based root-cause hypotheses, surfaces historical matches, recommends remediation checklists, and captures new postmortems directly back into memory.
 
-> This starter's matching engine is a transparent keyword-overlap baseline, not a production RCA model. The UI/API mark recommendations as advisory. Add a configured Hindsight service and LLM for the full memory-agent implementation before claiming those integrations are live.
+---
 
-## Run locally (Windows / VS Code)
-Install Python 3.10+ and Node.js 20+.
+## Architecture Stack
 
-### 1. Backend
-Open terminal in VS Code:
+- **Backend**: Python 3.10+, FastAPI, SQLite (persisted incident memory), Pydantic v2, Uvicorn
+- **Frontend**: React 18, Vite 6, Modern DevOps Command Center CSS
+- **Deployment**:
+  - Backend: Render Web Service via `render.yaml`
+  - Frontend: Vercel SPA via `vercel.json`
+
+---
+
+## Quick Start (Run Locally on Windows / VS Code)
+
+### Prerequisites
+- Python 3.10+ (via `py` launcher or `python`)
+- Node.js 20+
+
+### 1. Start Backend API
+Open a terminal in the project directory:
 ```powershell
 cd backend
 py -m venv .venv
@@ -22,61 +31,68 @@ py -m venv .venv
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
-API: http://127.0.0.1:8000  
-Interactive API docs: http://127.0.0.1:8000/docs
+- API Endpoint: `http://127.0.0.1:8000`
+- Interactive API Docs (Swagger): [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- Liveness Probe: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
 
-To enable LLM-assisted analysis, set `OPENAI_API_KEY` before starting the backend. Retrieved resolved incidents are included as context; this is retrieval-augmented generation, not model fine-tuning. Incident text and retrieved postmortems are sent to OpenAI, so only enable this when your data-handling policy permits it. Without a key or if the provider is unavailable, analysis falls back to the local keyword baseline. The model defaults to `gpt-4o-mini`; override it with `OPENAI_MODEL`.
-
-```powershell
-$env:OPENAI_API_KEY = "your-key"
-uvicorn main:app --reload
-```
-
-For Render, add `OPENAI_API_KEY` and optionally `OPENAI_MODEL` in the service's environment settings. Keep the key on the backend and never add it to the frontend or commit it to Git.
-
-If PowerShell blocks activation, run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal, then activate again.
-
-### 2. Frontend (second terminal)
+### 2. Start Frontend
+Open a second terminal window:
 ```powershell
 cd frontend
 npm install
-Copy-Item .env.example .env
 npm run dev
 ```
-Open the local URL Vite prints, usually http://localhost:5173.
+- Open your browser to the local URL (usually `http://localhost:5173`).
 
-## Demo flow
-1. Open the dashboard; sample resolved incidents are preloaded.
-2. Click Analyze on Payment API to see historical memory matches.
-3. Report a new incident (e.g. `Payment API`, `Database connection timeout: pool exhausted`).
-4. Analyze, review the matches, edit confirmed root cause and resolution, then click **Resolve & remember**.
-5. Analyze a later similar incident and show the saved postmortem in historical matches.
+---
 
-## Push to GitHub
-Create an empty repository on GitHub, then from the project root:
-```bash
-git init
-git add .
-git commit -m "Initial IncidentMind AI project"
-git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/incidentmind-ai.git
-git push -u origin main
-```
-Never commit `.env`, API keys, tokens, or production incident secrets.
+## 3-Minute Hackathon Demo Flow
 
-## Deploy the app to Render
+1. **Inspect Historical Seed Data**:
+   - Notice the preloaded resolved incidents in memory (Payment API, Auth Service, Inventory API).
+2. **Analyze an Incident**:
+   - Click **Analyze →** on `Payment API`.
+   - Inspect the surfaced 100% historical match and the past resolution: *"Raised pool size from 50 to 100..."*.
+3. **Report a New Active Incident**:
+   - Click **＋ Report incident**.
+   - Service: `Payment API`
+   - Severity: `Critical (P1)`
+   - Environment: `Production`
+   - Error: `Database connection timeout: pool exhausted under high transaction throughput`
+   - Submit the form.
+4. **Trigger AI Diagnosis**:
+   - Click **Analyze →** on the newly created ticket.
+   - Observe how the recall engine matches tokens, calculates confidence score, and structures advisory actions.
+5. **Continuous Learning (Resolve & Remember)**:
+   - Edit or confirm the root cause and resolution in the right panel.
+   - Click **✓ Resolve & Remember Postmortem**.
+   - Notice the status updates to `resolved` and becomes an active memory for all subsequent incidents.
+
+---
+
+## Cloud Deployment
+
+### 1. Deploy Backend to Render
 1. Push this repository to GitHub.
-2. In Render, choose **New + → Blueprint** and select this repository. Render reads the root `render.yaml` and creates the API web service and frontend static site.
-3. Wait for both services to deploy. Open the frontend URL shown in Render; the Blueprint supplies the API URL to the frontend build.
-4. Verify the API at `/health` and `/docs` on the API service URL.
-5. To enable LLM analysis, add `OPENAI_API_KEY` to the API service's environment in Render. Do not put it in the Blueprint or frontend. Without it, the app uses local keyword analysis.
-6. The API uses free ephemeral storage by default, so new incidents can be lost when the service restarts or redeploys. For durable data, attach persistent storage and configure `DB_PATH`, or use managed PostgreSQL for multi-user production.
+2. Log into [Render](https://render.com) and click **New +** → **Blueprint**.
+3. Select your GitHub repository. Render will automatically detect `render.yaml`.
+4. Copy the assigned URL (e.g., `https://incidentmind-api.onrender.com`).
+5. Confirm by testing `https://incidentmind-api.onrender.com/health`.
 
-## CORS
-For a public deployment, set backend `CORS_ORIGINS` to the exact frontend origin (comma-separated for previews if needed), rather than `*`. The current Blueprint uses `*` for quick hackathon setup.
+### 2. Deploy Frontend to Vercel
+1. Log into [Vercel](https://vercel.com) and import your GitHub repository.
+2. Select `frontend` as the **Root Directory**.
+3. Choose framework preset **Vite**.
+4. Under **Environment Variables**, set:
+   - `VITE_API_URL` = `https://incidentmind-api.onrender.com` (no trailing slash).
+5. Deploy and verify the live dashboard.
 
-## Suggested next upgrades
-- Replace SQLite with managed PostgreSQL for persistent multi-user use.
-- Integrate Hindsight retain/recall/reflect with credentials held only on the backend.
-- Integrate an LLM for structured RCA, with citations to retrieved incident IDs.
-- Add authentication, role-based access, audit logs, rate limits, log redaction, and approval-gated runbook execution.
+---
+
+## Team Division (5 Members)
+
+- **Member 1 (Lead)**: AI Similarity Engine & Hypothesis Formulation
+- **Member 2**: FastAPI Application & Incident Memory Persistence
+- **Member 3**: React 18 Command Center & Responsive UI
+- **Member 4**: DevOps, Render Blueprint, Vercel SPA & GitHub Setup
+- **Member 5**: Testing, Realistic Incident Datasets, Presentation & Demo Video

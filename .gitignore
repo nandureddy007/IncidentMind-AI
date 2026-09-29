@@ -1,11 +1,16 @@
 .env
 .env.*
 !.env.example
+**/.env
+**/.env.*
+!**/.env.example
 .venv/
 venv/
 node_modules/
+**/node_modules/
 __pycache__/
 *.py[cod]
 *.db
 dist/
+**/dist/
 .DS_Store
